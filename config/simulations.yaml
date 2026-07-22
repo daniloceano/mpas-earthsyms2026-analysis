@@ -1,0 +1,83 @@
+# Structured metadata for the two MPAS-Atmosphere regional simulations analysed
+# for the EarthSyms 2026 poster. Scientific/configuration facts only; machine
+# paths live in paths.local.yaml (see paths.example.yaml). Source of truth:
+# runs/meqbr_05km/README.md and the archived namelists/streams in each run dir.
+
+mesh:
+  name: meqbr_05km
+  n_cells: 76813
+  mean_cell_spacing_km: 4.6
+  domain:
+    lat_min: -7.7
+    lat_max: 6.7
+    lon_min: -55.0
+    lon_max: -32.7
+  config_len_disp_m: 5000.0
+
+vertical:
+  n_layers: 55          # nVertLevels     (layer centers: theta, rho, pressure, uReconstruct*)
+  n_interfaces: 56      # nVertLevelsP1   (layer interfaces: w, zgrid)
+  model_top_m: 30000
+  # Interfaces were chosen so a layer center sits ~50 m above local terrain
+  # (turbine-relevant). MPAS/Fortran is 1-based: the README's "level 2" is the
+  # 2nd layer center, which in 0-based Python indexing is index 1. Both name the
+  # same ~50 m center. Always validate against derived heights (see quicklook).
+  turbine_level_index_fortran: 2   # README/Fortran convention (1-based)
+  turbine_level_index_python: 1    # 0-based, for numpy/xarray array indexing
+  turbine_level_height_m: 50.0
+
+forcing:
+  initial_and_lbc: ERA5 reanalysis (pressure + single levels), 6-hourly LBCs
+  sst_source: NOAA OISST v2.1 daily (sfc_update generated, updating DISABLED)
+  sst_update_enabled: false
+
+physics:
+  suite: mesoscale_reference
+  time_step_s: 30
+  history_interval: hourly
+
+output:
+  # Variables the initial analyses rely on; inventory checks their presence.
+  required_variables:
+    - xtime
+    - latCell
+    - lonCell
+    - zgrid
+    - landmask
+    - uReconstructZonal
+    - uReconstructMeridional
+    - u10
+    - v10
+    - t2m
+    - xland
+    - rainnc
+    - rainc
+
+simulations:
+  sim_2021:
+    label: "2021 (Nov)"
+    history_subdir: "20211101_20211201"
+    analysis_start: 2021-11-01
+    analysis_end: 2021-12-01
+    spinup_start: 2021-10-21
+    spinup_end: 2021-10-31
+    integration_start: 2021-10-21   # accumulated precip counters start here
+    integration_end: 2021-12-01
+    era5_init: 2021-10-21
+    restart: null
+    expected_history_records: 721   # hourly, inclusive of both endpoints
+
+  sim_2022:
+    label: "2022 (Oct)"
+    history_subdir: "20221001_20221101"
+    analysis_start: 2022-10-01
+    analysis_end: 2022-11-01
+    spinup_start: 2022-09-21
+    spinup_end: 2022-09-30
+    integration_start: 2022-09-21   # accumulated precip counters start here
+    integration_end: 2022-11-01
+    era5_init: 2022-09-21
+    restart:
+      at: 2022-10-01
+      restart_file: restart.2022-10-01_00.00.00.nc
+    expected_history_records: 745   # hourly, inclusive of both endpoints

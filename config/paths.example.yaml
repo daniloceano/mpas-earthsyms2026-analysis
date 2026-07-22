@@ -1,0 +1,17 @@
+# Machine-specific paths. Copy this file to paths.local.yaml and edit for your
+# machine; paths.local.yaml is gitignored and never committed.
+#
+#   cp config/paths.example.yaml config/paths.local.yaml
+#
+# The raw MPAS output is large and external — it is NOT stored in this repo.
+# Scripts read it in place from data_root.
+
+# Directory that holds both dated run subdirectories plus the shared mesh files
+# (meqbr_05km.static.nc, meqbr_05km.graph.info.part.80, namelists, ...).
+data_root: /p1-swell/danilocs/MPAS-Research/runs/meqbr_05km
+
+# Optional per-run absolute overrides. Leave null to use
+# data_root / <history_subdir> from simulations.yaml.
+runs:
+  sim_2021: null
+  sim_2022: null

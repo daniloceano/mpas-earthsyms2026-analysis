@@ -1,0 +1,36 @@
+# Local machine configuration (paths to external simulation data)
+config/paths.local.yaml
+
+# Optional local symlinks to external data — never committed
+.local-data/
+
+# Large simulation data (must never be committed; read externally in place)
+*.nc
+*.grib
+*.grib2
+*.grb
+*.zarr/
+
+# Generated figures (exploratory + poster). Version a selected figure
+# deliberately with `git add -f` if it is approved.
+figures/exploratory/*
+figures/poster/*
+!figures/exploratory/.gitkeep
+!figures/poster/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Tooling / OS / logs / temp
+.DS_Store
+*.log
+*.tmp
+*~

@@ -1,0 +1,14 @@
+# Minimal environment for the initial EarthSyms 2026 analysis scripts.
+# Create with:  conda env create -f environment.yml
+name: mpas-earthsyms2026
+channels:
+  - conda-forge
+dependencies:
+  - python >=3.10
+  - xarray
+  - netcdf4
+  - numpy
+  - pandas
+  - matplotlib
+  - pyyaml
+  - dask            # lazy/chunked access to the large history datasets

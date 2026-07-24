@@ -11,6 +11,10 @@ config/paths.local.yaml
 *.grb
 *.zarr/
 
+# Raw observation spreadsheets (heavy exports) — preprocess to a small
+# tracked CSV instead (see data/README.md and scripts/exploratory/preprocess_*.py)
+data/*.xlsx
+
 # Generated figures (exploratory + poster). Version a selected figure
 # deliberately with `git add -f` if it is approved.
 figures/exploratory/*

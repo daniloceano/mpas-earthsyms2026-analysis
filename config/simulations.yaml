@@ -53,6 +53,43 @@ output:
     - rainnc
     - rainc
 
+observations:
+  # In-situ instruments for later model-vs-obs comparison. Data files are
+  # tracked under data/ (see data/README.md); coordinates here are the source
+  # of truth for any script that needs to plot or extract the nearest cell.
+  P0:
+    label: "P0 (floating LiDAR)"
+    lat: -2.694107
+    lon: -42.554807
+    data_file: "data/P0_LIDAR_matrix.mat"
+    instrument: floating LiDAR
+    variables: [wspeed, wdir, vertspeed, temp, press, humid, TI, CNR, avail]
+    heights_m: [40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170,
+                180, 190, 200, 220, 240, 260]
+    temporal_resolution: 10min
+    period_start: 2021-11-09
+    period_end: 2021-12-13
+    overlaps_simulation: sim_2021   # fully within sim_2021's analysis window
+
+  LPI:
+    label: "LPI (Porto-Ilha LiDAR)"
+    lat: -4.8789425
+    lon: -37.1478801
+    data_file: "data/LPI_processed.csv.gz"
+    instrument: fixed LiDAR (Porto-Ilha)
+    variables: [spd, dir, temp_10, pres_10, rh_10, ti, wspd_std]
+    heights_m: [10, 26, 50, 100, 150, 200]
+    temporal_resolution: 10min
+    period_start: 2022-06-23
+    period_end: 2025-06-06
+    overlaps_simulation: sim_2022   # only sim covering this deployment's span
+    notes: >
+      Raw source is data/lidar_porto_ilha_5niveis_final_final.xlsx (gitignored,
+      ~87 MB), preprocessed by scripts/exploratory/preprocess_lpi_lidar.py into
+      the tracked data_file above. No overlap with sim_2021 (deployment starts
+      2022-06-23). See data/README.md for preprocessing decisions (timezone
+      conversion, duplicate direction columns, dropped fields).
+
 simulations:
   sim_2021:
     label: "2021 (Nov)"

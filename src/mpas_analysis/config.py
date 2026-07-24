@@ -50,6 +50,7 @@ class Config:
     mesh: dict = field(default_factory=dict)
     vertical: dict = field(default_factory=dict)
     output: dict = field(default_factory=dict)
+    observations: dict = field(default_factory=dict)
 
     def simulation(self, key: str) -> Simulation:
         try:
@@ -57,6 +58,13 @@ class Config:
         except KeyError:
             known = ", ".join(self.simulations)
             raise KeyError(f"unknown simulation {key!r}; known: {known}") from None
+
+    def observation(self, key: str) -> dict:
+        try:
+            return self.observations[key]
+        except KeyError:
+            known = ", ".join(self.observations)
+            raise KeyError(f"unknown observation site {key!r}; known: {known}") from None
 
     @property
     def required_variables(self) -> list[str]:
@@ -147,4 +155,5 @@ def load_config(
         mesh=sims_doc.get("mesh", {}),
         vertical=sims_doc.get("vertical", {}),
         output=sims_doc.get("output", {}),
+        observations=sims_doc.get("observations", {}),
     )

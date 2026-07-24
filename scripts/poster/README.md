@@ -1,8 +1,16 @@
 # Poster figure scripts
 
 Deterministic scripts that produce the **final** EarthSyms 2026 poster figures.
-Empty for now by design — no poster script is written until the corresponding
-analysis has actually been selected from exploration.
+A poster script is only written once the corresponding analysis has actually
+been selected from exploration.
+
+| Script | Figure |
+|---|---|
+| `fig01_domain_topo_sst.py` | Domain topography + initial SST, native mesh (all observation sites marked) |
+| `fig02_scatter_wspeed_p0_all_levels.py` | MPAS vs P0 LiDAR wind speed, all levels pooled |
+| `fig03_map_p0_nearest_cell.py` | Native-mesh zoom on P0 + comparison cell (also used as banner) |
+| `fig04_scatter_wspeed_lpi_all_levels.py` | MPAS vs LPI LiDAR wind speed, all levels pooled |
+| `fig05_map_lpi_nearest_cell.py` | Native-mesh zoom on LPI + comparison cell |
 
 ## Promotion process (exploration → poster)
 

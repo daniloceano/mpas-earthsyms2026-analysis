@@ -10,5 +10,8 @@ dependencies:
   - numpy
   - pandas
   - matplotlib
+  - cartopy         # map projections/coastlines for native-mesh poster figures
+  - scipy           # reading in-situ observation .mat files (scipy.io.loadmat)
+  - openpyxl        # reading in-situ observation .xlsx files (LPI LiDAR)
   - pyyaml
   - dask            # lazy/chunked access to the large history datasets

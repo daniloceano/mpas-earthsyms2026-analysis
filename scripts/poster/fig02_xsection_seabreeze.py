@@ -22,6 +22,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import cartopy.crs as ccrs  # noqa: E402
+import cartopy.feature as cfeature  # noqa: E402
 import matplotlib.colors as mcolors  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
@@ -114,8 +115,8 @@ def draw_location_inset(
 ) -> None:
     """Small coastline inset (top-right) showing where the meridional
     transect (a north-south line through the site) sits within the domain.
-    Kept map-only: no ticks, labels, or title — just coastline, the transect
-    line, and the site star, framed in a box.
+    Kept map-only: no ticks, labels, or title — just land/ocean fill, the
+    transect line, and the site star, framed in a box.
     """
     ax_loc = ax.inset_axes([0.70, 0.66, 0.28, 0.32], projection=ccrs.PlateCarree(),
                            zorder=20)
@@ -124,7 +125,11 @@ def draw_location_inset(
         domain["lon_min"] - margin, domain["lon_max"] + margin,
         domain["lat_min"] - margin, domain["lat_max"] + margin,
     ], crs=ccrs.PlateCarree())
-    ax_loc.set_facecolor("white")
+    # Gray continent / blue sea — same ocean tint used for fig01's zoom insets.
+    ax_loc.add_feature(cfeature.NaturalEarthFeature("physical", "ocean", "10m"),
+                       facecolor="#cfe8f3", edgecolor="none", zorder=0)
+    ax_loc.add_feature(cfeature.NaturalEarthFeature("physical", "land", "10m"),
+                       facecolor="0.75", edgecolor="none", zorder=1)
     ax_loc.coastlines(resolution="10m", linewidth=0.5, color="black", zorder=2)
     ax_loc.plot(
         [site["lon"], site["lon"]],

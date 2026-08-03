@@ -57,8 +57,10 @@ ANNOT_FS = 11
 SITE_COLORS = {"P0": "black", "LPI": "black"}
 
 # Inset placement, in ax_main axes-fraction coordinates: (x0, y0, width, height).
+# P0's y0 is nudged up from 0.03 to clear the main map's bottom border (was
+# overlapping it; ~0.03 axes-fraction ~= half a degree of latitude here).
 INSET_BOUNDS = {
-    "P0": (0.015, 0.03, 0.33, 0.40),
+    "P0": (0.015, 0.055, 0.33, 0.40),
     "LPI": (0.66, 0.57, 0.33, 0.40),
 }
 
@@ -229,7 +231,7 @@ def draw_zoom_panel(
         ))
         ax.annotate(
             f"MPAS cell\n(~{np.sqrt((cell_lat - site['lat'])**2 + (cell_lon - site['lon'])**2) * KM_PER_DEG_LAT:.1f} km)",
-            xy=(cell_lon, cell_lat), xytext=(8, -18),
+            xy=(cell_lon, cell_lat), xytext=(14, -25),
             textcoords="offset points", fontsize=ANNOT_FS, color=color,
             bbox=dict(boxstyle="round,pad=0.25", fc="white", ec=color,
                       alpha=0.9, lw=0.9),
@@ -241,7 +243,7 @@ def draw_zoom_panel(
             markerfacecolor="black", markeredgecolor="white",
             markeredgewidth=1.3, zorder=6)
     ax.annotate(
-        site_key, xy=(site["lon"], site["lat"]), xytext=(5, 5),
+        site_key, xy=(site["lon"], site["lat"]), xytext=(9, 9),
         textcoords="offset points", fontsize=TICK_FS - 1, fontweight="bold",
         bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="black",
                   alpha=0.85, lw=0.9),
@@ -364,8 +366,17 @@ def main() -> int:
     # calls — the previous approach — produced large, unpredictable gaps
     # because each colorbar call and the aspect correction each resize the
     # axes independently; precomputing removes that interaction entirely.)
-    FIG_W, FIG_H = 13.0, 7.5
-    MAP_TOP, MAP_BOTTOM, MAP_RIGHT = 0.95, 0.05, 0.98
+    # FIG_W_BASE is the width the map/colorbar fractions below were tuned
+    # for; RIGHT_MARGIN_IN adds pure canvas width reserved for the east-side
+    # gridline labels (moved there from the west so they'd clear the
+    # colorbars) without changing the map's or colorbars' absolute size or
+    # position — see CBAR_*_X below, which rescale by FIG_W_BASE/FIG_W to
+    # keep those axes at the same physical (inch) spot on the wider canvas.
+    FIG_W_BASE = 13.0
+    RIGHT_MARGIN_IN = 0.9
+    FIG_W, FIG_H = FIG_W_BASE + RIGHT_MARGIN_IN, 7.5
+    MAP_TOP, MAP_BOTTOM = 0.95, 0.05
+    MAP_RIGHT = 1.0 - RIGHT_MARGIN_IN / FIG_W
     domain = config.mesh["domain"]
     margin = 0.15
     lon_span = (domain["lon_max"] + margin) - (domain["lon_min"] - margin)
@@ -396,8 +407,11 @@ def main() -> int:
     ax_main.coastlines(resolution="10m", linewidth=0.9, color="black", zorder=3)
     gl = ax_main.gridlines(draw_labels=True, alpha=0.35, linestyle="--",
                             linewidth=0.6)
+    # Latitude labels on the east (right) side, not west: the colorbars sit
+    # just left of the map, and west-side labels crowded/overlapped them.
     gl.top_labels = False
-    gl.right_labels = False
+    gl.left_labels = False
+    gl.right_labels = True
     gl.xlabel_style = {"size": TICK_FS}
     gl.ylabel_style = {"size": TICK_FS}
     for spine in ax_main.spines.values():
@@ -423,15 +437,19 @@ def main() -> int:
 
     # Colorbars: hand-placed narrow axes just left of the map, ticks/labels
     # facing further left (away from the map) so the two bars sit close
-    # together with no dead space between them.
-    cbar_land_ax = fig.add_axes([0.08, 0.20, 0.014, 0.55])
+    # together with no dead space between them. X positions/width are
+    # given as fractions of FIG_W_BASE, then rescaled to the actual (wider)
+    # FIG_W so they land at the same physical spot regardless of how much
+    # right-margin was reserved for the gridline labels.
+    _resc = FIG_W_BASE / FIG_W
+    cbar_land_ax = fig.add_axes([0.08 * _resc, 0.20, 0.014 * _resc, 0.55])
     cbar_land = fig.colorbar(land_coll, cax=cbar_land_ax, extend="max")
     cbar_land_ax.yaxis.set_ticks_position("left")
     cbar_land_ax.yaxis.set_label_position("left")
     cbar_land.set_label("Terrain height (m)", fontsize=LABEL_FS)
     cbar_land_ax.tick_params(labelsize=TICK_FS)
 
-    cbar_ocean_ax = fig.add_axes([0.15, 0.20, 0.014, 0.55])
+    cbar_ocean_ax = fig.add_axes([0.15 * _resc, 0.20, 0.014 * _resc, 0.55])
     cbar_ocean = fig.colorbar(ocean_coll, cax=cbar_ocean_ax, extend="min")
     cbar_ocean_ax.yaxis.set_ticks_position("left")
     cbar_ocean_ax.yaxis.set_label_position("left")

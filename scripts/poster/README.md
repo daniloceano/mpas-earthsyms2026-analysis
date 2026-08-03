@@ -11,6 +11,8 @@ been selected from exploration.
 | `fig03_map_p0_nearest_cell.py` | Native-mesh zoom on P0 + comparison cell (also used as banner) |
 | `fig04_scatter_wspeed_lpi_all_levels.py` | MPAS vs LPI LiDAR wind speed, all levels pooled |
 | `fig05_map_lpi_nearest_cell.py` | Native-mesh zoom on LPI + comparison cell |
+| `fig06_xsection_seabreeze.py` | Meridional cross-section of temperature + wind at sea-breeze (Tmax) moment; `--site P0` or `--site LPI` |
+| `fig07_domain_with_zoom_insets.py` | Domain terrain/SST (left) + P0 and LPI zoom panels stacked on right; coloured bounding boxes link each zoom to its location on the domain map |
 
 ## Promotion process (exploration → poster)
 

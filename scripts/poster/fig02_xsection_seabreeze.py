@@ -3,7 +3,9 @@
 sea-breeze moment (Tmax on the windiest day) through a LiDAR site.
 
 Promoted from ``scripts/exploratory/xsection_temp_seabreeze_p0.py``;
-single-panel poster version showing the sea-breeze (Tmax) moment only.
+single-panel poster version showing the sea-breeze (Tmax) moment only. A
+small coastline inset in the top-right corner shows where the transect sits
+within the domain.
 
     python scripts/poster/fig02_xsection_seabreeze.py
     python scripts/poster/fig02_xsection_seabreeze.py --site LPI
@@ -19,6 +21,7 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
+import cartopy.crs as ccrs  # noqa: E402
 import matplotlib.colors as mcolors  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
@@ -101,6 +104,44 @@ def load_column_fields(
         "temp_c": temperature_from_theta_pressure(theta, pressure) - 273.15,
         "u": u, "v": v, "w": w,
     }
+
+
+def draw_location_inset(
+    ax: "matplotlib.axes.Axes",
+    domain: dict,
+    site: dict,
+    half_width_deg: float,
+) -> None:
+    """Small coastline inset (top-right) showing where the meridional
+    transect (a north-south line through the site) sits within the domain.
+    Kept map-only: no ticks, labels, or title — just coastline, the transect
+    line, and the site star, framed in a box.
+    """
+    ax_loc = ax.inset_axes([0.70, 0.66, 0.28, 0.32], projection=ccrs.PlateCarree(),
+                           zorder=20)
+    margin = 0.15
+    ax_loc.set_extent([
+        domain["lon_min"] - margin, domain["lon_max"] + margin,
+        domain["lat_min"] - margin, domain["lat_max"] + margin,
+    ], crs=ccrs.PlateCarree())
+    ax_loc.set_facecolor("white")
+    ax_loc.coastlines(resolution="10m", linewidth=0.5, color="black", zorder=2)
+    ax_loc.plot(
+        [site["lon"], site["lon"]],
+        [site["lat"] - half_width_deg, site["lat"] + half_width_deg],
+        color="black", linewidth=1.6, zorder=4,
+        transform=ccrs.PlateCarree(),
+    )
+    ax_loc.plot(
+        site["lon"], site["lat"], marker="*", markersize=9,
+        markerfacecolor="black", markeredgecolor="white", markeredgewidth=0.7,
+        zorder=5, transform=ccrs.PlateCarree(),
+    )
+    ax_loc.set_xticks([])
+    ax_loc.set_yticks([])
+    for spine in ax_loc.spines.values():
+        spine.set_edgecolor("black")
+        spine.set_linewidth(1.0)
 
 
 def main() -> int:
@@ -216,6 +257,8 @@ def main() -> int:
     cbar = fig.colorbar(mesh, ax=ax, shrink=0.9, pad=0.02, aspect=28)
     cbar.set_label("Temperature (°C)", fontsize=LABEL_FS)
     cbar.ax.tick_params(labelsize=TICK_FS)
+
+    draw_location_inset(ax, config.mesh["domain"], site, args.half_width_deg)
 
     fig.text(
         0.5, -0.02,

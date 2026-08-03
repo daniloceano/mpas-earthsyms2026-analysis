@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Poster Figure 2: MPAS vs P0 LiDAR wind speed, all matched levels pooled.
+"""Poster Figure 3: MPAS vs P0 LiDAR wind speed, all matched levels pooled.
 
 Pairs hourly model wind speed (nearest ocean cell to P0) with the nearest P0
 LiDAR record (<= 5 min away) at every model layer that lines up with a LiDAR
@@ -14,7 +14,7 @@ MSE_dissipative/MSE_dispersive decomposition — see
 Comparison window is the intersection of model output (sim_2021 analysis
 window) and LiDAR coverage: 2021-11-09 to 2021-12-01.
 
-    python scripts/poster/fig02_scatter_wspeed_p0_all_levels.py
+    python scripts/poster/fig03_scatter_wspeed_p0_all_levels.py
 """
 
 from __future__ import annotations
@@ -233,7 +233,7 @@ def main() -> int:
     fig.text(0.5, 0.01, per_level_str, ha="center", fontsize=8, color="dimgray")
 
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    out = args.output or FIG_DIR / "fig02_scatter_wspeed_p0_all_levels.png"
+    out = args.output or FIG_DIR / "fig03_scatter_wspeed_p0_all_levels.png"
     fig.savefig(out, dpi=args.dpi, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out}")

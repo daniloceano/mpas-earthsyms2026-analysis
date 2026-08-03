@@ -4,15 +4,22 @@ Deterministic scripts that produce the **final** EarthSyms 2026 poster figures.
 A poster script is only written once the corresponding analysis has actually
 been selected from exploration.
 
+Numbered in poster reading order (row 1 left→right, then row 2 left→right):
+
 | Script | Figure |
 |---|---|
-| `fig01_domain_topo_sst.py` | Domain topography + initial SST, native mesh (all observation sites marked) |
-| `fig02_scatter_wspeed_p0_all_levels.py` | MPAS vs P0 LiDAR wind speed, all levels pooled |
-| `fig03_map_p0_nearest_cell.py` | Native-mesh zoom on P0 + comparison cell (also used as banner) |
+| `fig01_domain_with_zoom_insets.py` | Domain terrain/SST, full-figure map; P0 and LPI zoom panels drawn as insets *inside* the map (top-left/top-right), each linked to its zoom extent by a coloured box + connector line |
+| `fig02_xsection_seabreeze.py` | Meridional cross-section of temperature + wind at sea-breeze (Tmax) moment; `--site P0` or `--site LPI` |
+| `fig03_scatter_wspeed_p0_all_levels.py` | MPAS vs P0 LiDAR wind speed, all levels pooled |
 | `fig04_scatter_wspeed_lpi_all_levels.py` | MPAS vs LPI LiDAR wind speed, all levels pooled |
-| `fig05_map_lpi_nearest_cell.py` | Native-mesh zoom on LPI + comparison cell |
-| `fig06_xsection_seabreeze.py` | Meridional cross-section of temperature + wind at sea-breeze (Tmax) moment; `--site P0` or `--site LPI` |
-| `fig07_domain_with_zoom_insets.py` | Domain terrain/SST (left) + P0 and LPI zoom panels stacked on right; coloured bounding boxes link each zoom to its location on the domain map |
+
+Poster layout: row 1 is fig01 + fig02 side by side (fig01 ≈ 44%, fig02 ≈ 51%
+of the row width to match their native aspect ratios at equal height); row 2
+is fig03 + fig04 side by side (~45%/45%, both square).
+
+`fig01_domain_with_zoom_insets.py` replaces three older scripts (separate
+domain overview, P0 zoom map, and LPI zoom map) that have been deleted; it
+combines the domain overview and both site zooms into a single panel.
 
 ## Promotion process (exploration → poster)
 

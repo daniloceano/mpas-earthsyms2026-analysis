@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-"""Poster Figure 6: meridional cross-section of temperature + wind at the
+"""Poster Figure 2: meridional cross-section of temperature + wind at the
 sea-breeze moment (Tmax on the windiest day) through a LiDAR site.
 
 Promoted from ``scripts/exploratory/xsection_temp_seabreeze_p0.py``;
 single-panel poster version showing the sea-breeze (Tmax) moment only.
 
-    python scripts/poster/fig06_xsection_seabreeze.py
-    python scripts/poster/fig06_xsection_seabreeze.py --site LPI
-    python scripts/poster/fig06_xsection_seabreeze.py --half-width-deg 3 --zmax 1200
+    python scripts/poster/fig02_xsection_seabreeze.py
+    python scripts/poster/fig02_xsection_seabreeze.py --site LPI
+    python scripts/poster/fig02_xsection_seabreeze.py --half-width-deg 3 --zmax 1200
 """
 
 from __future__ import annotations
@@ -231,7 +231,7 @@ def main() -> int:
     )
 
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    out = args.output or FIG_DIR / f"fig06_xsection_seabreeze_{args.site.lower()}.png"
+    out = args.output or FIG_DIR / f"fig02_xsection_seabreeze_{args.site.lower()}.png"
     fig.savefig(out, dpi=args.dpi, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {out}")

@@ -27,6 +27,7 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.colors as mcolors  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
@@ -43,6 +44,26 @@ from mpas_analysis.verification import mse_decomposition  # noqa: E402
 
 FIG_DIR = cfg.REPO_ROOT / "figures" / "poster"
 MATLAB_EPOCH_OFFSET_DAYS = 719529
+
+# Poster-level font sizes (bumped for legibility at poster viewing distance)
+TITLE_FS = 16
+LABEL_FS = 16
+TICK_FS = 14
+LEGEND_FS = 13
+STAT_FS = 14
+CAPTION_FS = 12
+PANEL_LABEL = "(a)"
+
+
+def density_colormap() -> "mcolors.Colormap":
+    """Truncated 'inferno': drops the near-black floor and the pale-yellow
+    ceiling of the stock colormap so low-density points stay visible against
+    a white background and the high-density core reads as a strong, saturated
+    orange-red instead of washing out to near-white."""
+    base = plt.get_cmap("inferno")
+    return mcolors.LinearSegmentedColormap.from_list(
+        "inferno_poster", base(np.linspace(0.12, 0.92, 256))
+    )
 
 # (label, model target height AGL in m, obs heights averaged to represent it)
 LEVEL_MATCHES = [
@@ -181,23 +202,26 @@ def main() -> int:
     print(f"pooled {n_total} records across {len(LEVEL_MATCHES)} levels")
 
     # --- Density scatter (all levels pooled) ---
-    fig, ax = plt.subplots(figsize=(7.5, 7.5))
+    fig, ax = plt.subplots(figsize=(8.3, 7.5))
     xy = np.vstack([x, y])
     density = gaussian_kde(xy)(xy)
     order = np.argsort(density)
-    sc = ax.scatter(x[order], y[order], c=density[order], cmap="viridis",
-                    s=14, edgecolor="none")
-    fig.colorbar(sc, ax=ax, label="point density", shrink=0.8, pad=0.02, aspect=30)
+    sc = ax.scatter(x[order], y[order], c=density[order], cmap=density_colormap(),
+                    s=20, edgecolor="none")
+    cbar = fig.colorbar(sc, ax=ax, label="point density", shrink=0.8, pad=0.02, aspect=30)
+    cbar.set_label("point density", fontsize=LABEL_FS)
+    cbar.ax.tick_params(labelsize=TICK_FS, width=1.2)
+    cbar.outline.set_linewidth(1.3)
 
     lo = float(min(x.min(), y.min()))
     hi = float(max(x.max(), y.max()))
     margin = 0.05 * (hi - lo)
     lims = (lo - margin, hi + margin)
-    ax.plot(lims, lims, "k--", lw=1.2, label="1:1")
+    ax.plot(lims, lims, "k--", lw=1.8, label="1:1")
 
     fit = linregress(x, y)
     xs = np.linspace(*lims, 100)
-    ax.plot(xs, fit.slope * xs + fit.intercept, color="crimson", lw=1.5,
+    ax.plot(xs, fit.slope * xs + fit.intercept, color="royalblue", lw=2.4,
             label=f"fit: y = {fit.slope:.2f}x + {fit.intercept:.2f}")
 
     rmse = float(np.sqrt(np.mean((y - x) ** 2)))
@@ -214,27 +238,33 @@ def main() -> int:
         f"Bias = {bias:+.2f} m s$^{{-1}}$\n"
         f"MSE$_{{disp}}$ = {mse_disp:.2f} m$^2$ s$^{{-2}}$\n"
         f"MSE$_{{diss}}$ = {mse_diss:.2f} m$^2$ s$^{{-2}}$",
-        transform=ax.transAxes, va="top", ha="left", fontsize=10,
-        bbox=dict(boxstyle="round,pad=0.35", fc="white", ec="grey", alpha=0.9),
+        transform=ax.transAxes, va="top", ha="left", fontsize=STAT_FS,
+        bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="grey", alpha=0.92, lw=1.3),
     )
 
     ax.set_xlim(*lims)
     ax.set_ylim(*lims)
     ax.set_aspect("equal")
-    ax.legend(loc="lower right", fontsize=9)
-    ax.grid(True, alpha=0.3)
-    ax.set_xlabel("P0 LiDAR wind speed (m s$^{-1}$)")
-    ax.set_ylabel("MPAS wind speed (m s$^{-1}$)")
-    ax.set_title(f"MPAS {sim.label} vs P0 — wind speed ({level_range_str} pooled)",
-                fontsize=12.5)
+    ax.legend(loc="lower right", fontsize=LEGEND_FS)
+    ax.grid(True, alpha=0.3, linewidth=0.7)
+    ax.tick_params(labelsize=TICK_FS, width=1.2, length=6)
+    for spine in ax.spines.values():
+        spine.set_linewidth(1.3)
+    ax.set_xlabel("P0 LiDAR wind speed (m s$^{-1}$)", fontsize=LABEL_FS)
+    ax.set_ylabel("MPAS wind speed (m s$^{-1}$)", fontsize=LABEL_FS)
+    ax.set_title(f"{PANEL_LABEL} MPAS {sim.label} vs P0 — wind speed",
+                fontsize=TITLE_FS)
     fig.tight_layout()
     # Per-level N breakdown as a bottom caption (full figure width, clear of
-    # the colorbar which only crowds the top-right corner).
-    fig.text(0.5, 0.01, per_level_str, ha="center", fontsize=8, color="dimgray")
+    # the colorbar which only crowds the top-right corner). The pooled level
+    # range moved here (from the title) to keep the title short enough to
+    # clear the colorbar at poster-scale font sizes.
+    fig.text(0.5, 0.01, f"levels pooled ({level_range_str}): {per_level_str}",
+              ha="center", fontsize=CAPTION_FS, color="dimgray")
 
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     out = args.output or FIG_DIR / "fig03_scatter_wspeed_p0_all_levels.png"
-    fig.savefig(out, dpi=args.dpi, bbox_inches="tight")
+    fig.savefig(out, dpi=args.dpi, bbox_inches="tight", pad_inches=0.05)
     plt.close(fig)
     print(f"wrote {out}")
     return 0

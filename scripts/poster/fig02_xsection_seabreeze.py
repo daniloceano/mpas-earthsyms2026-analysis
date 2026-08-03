@@ -40,11 +40,15 @@ from mpas_analysis.thermo import temperature_from_theta_pressure  # noqa: E402
 FIG_DIR = cfg.REPO_ROOT / "figures" / "poster"
 KM_PER_DEG_LAT = 111.0
 
-# Poster-level base font sizes
-TITLE_FS = 14
-LABEL_FS = 13
-TICK_FS = 11
-ANNOT_FS = 10
+# Poster-level base font sizes (bumped for legibility at poster viewing distance)
+TITLE_FS = 18
+LABEL_FS = 16
+TICK_FS = 14
+ANNOT_FS = 13
+
+# Compact panel labels for the two poster sites, read in this fixed order
+# wherever P0/LPI appear side by side (also used to prefix fig03/fig04 titles).
+PANEL_LABELS = {"P0": "(a)", "LPI": "(b)"}
 
 
 def sample_meridional_transect(
@@ -130,23 +134,23 @@ def draw_location_inset(
                        facecolor="#cfe8f3", edgecolor="none", zorder=0)
     ax_loc.add_feature(cfeature.NaturalEarthFeature("physical", "land", "10m"),
                        facecolor="0.75", edgecolor="none", zorder=1)
-    ax_loc.coastlines(resolution="10m", linewidth=0.5, color="black", zorder=2)
+    ax_loc.coastlines(resolution="10m", linewidth=0.9, color="black", zorder=2)
     ax_loc.plot(
         [site["lon"], site["lon"]],
         [site["lat"] - half_width_deg, site["lat"] + half_width_deg],
-        color="black", linewidth=1.6, zorder=4,
+        color="black", linewidth=2.2, zorder=4,
         transform=ccrs.PlateCarree(),
     )
     ax_loc.plot(
-        site["lon"], site["lat"], marker="*", markersize=9,
-        markerfacecolor="black", markeredgecolor="white", markeredgewidth=0.7,
+        site["lon"], site["lat"], marker="*", markersize=11,
+        markerfacecolor="black", markeredgecolor="white", markeredgewidth=1.0,
         zorder=5, transform=ccrs.PlateCarree(),
     )
     ax_loc.set_xticks([])
     ax_loc.set_yticks([])
     for spine in ax_loc.spines.values():
         spine.set_edgecolor("black")
-        spine.set_linewidth(1.0)
+        spine.set_linewidth(1.4)
 
 
 def main() -> int:
@@ -218,7 +222,7 @@ def main() -> int:
     mesh = ax.pcolormesh(x2d, y2d, d["temp_c"], cmap="RdYlBu_r", norm=norm,
                          shading="flat")
     ax.fill_between(dist_km, 0.0, ter_cols, color="0.4", zorder=5, linewidth=0)
-    ax.plot(dist_km, ter_cols, color="k", linewidth=0.6, zorder=6)
+    ax.plot(dist_km, ter_cols, color="k", linewidth=1.1, zorder=6)
 
     # Wind: along-transect = meridional (v) + w; cross-transect = zonal (u)
     ci = np.arange(0, len(cells), args.wind_stride)
@@ -228,7 +232,7 @@ def main() -> int:
     Z = z_center[L, C]
     ax.quiver(X, Z, d["v"][L, C], d["w"][L, C] * args.w_exag, angles="uv",
               pivot="mid", scale_units="width", scale=args.wind_scale,
-              width=0.0022, color="k", alpha=0.85, zorder=8)
+              width=0.0032, color="k", alpha=0.85, zorder=8)
 
     amax = float(np.nanmax(np.abs(d["u"]))) or 1.0
     Un = d["u"][L, C]
@@ -237,19 +241,21 @@ def main() -> int:
     toward = sig & (Un > 0)
     away = sig & (Un <= 0)
     ax.scatter(X[sig], Z[sig], s=size[sig], facecolors="none",
-               edgecolors="k", linewidths=0.5, alpha=0.7, zorder=9)
+               edgecolors="k", linewidths=0.8, alpha=0.7, zorder=9)
     ax.scatter(X[toward], Z[toward], s=size[toward] * 0.22,
                c="k", marker="o", alpha=0.7, zorder=10)
     ax.scatter(X[away], Z[away], s=size[away] * 0.5,
-               c="k", marker="x", linewidths=0.7, alpha=0.7, zorder=10)
+               c="k", marker="x", linewidths=1.0, alpha=0.7, zorder=10)
 
-    ax.axvline(0.0, color="black", linestyle=":", linewidth=1.2, zorder=4)
+    ax.axvline(0.0, color="black", linestyle=":", linewidth=1.8, zorder=4)
 
     ax.set_ylim(0.0, args.zmax)
     ax.set_xlabel(f"Distance from {args.site} (km, north +)", fontsize=LABEL_FS)
     ax.set_ylabel("Height (m MSL)", fontsize=LABEL_FS)
-    ax.tick_params(labelsize=TICK_FS)
-    ax.grid(True, alpha=0.25)
+    ax.tick_params(labelsize=TICK_FS, width=1.2, length=6)
+    ax.grid(True, alpha=0.3, linewidth=0.7)
+    for spine in ax.spines.values():
+        spine.set_linewidth(1.3)
 
     lat_ax = ax.secondary_xaxis(
         "top",
@@ -257,11 +263,13 @@ def main() -> int:
                    lambda lt: (lt - site["lat"]) * KM_PER_DEG_LAT),
     )
     lat_ax.set_xlabel("Latitude (°)", fontsize=TICK_FS, labelpad=3)
-    lat_ax.tick_params(labelsize=TICK_FS)
+    lat_ax.tick_params(labelsize=TICK_FS, width=1.2, length=6)
+    lat_ax.spines["top"].set_linewidth(1.3)
 
     cbar = fig.colorbar(mesh, ax=ax, shrink=0.9, pad=0.02, aspect=28)
     cbar.set_label("Temperature (°C)", fontsize=LABEL_FS)
-    cbar.ax.tick_params(labelsize=TICK_FS)
+    cbar.ax.tick_params(labelsize=TICK_FS, width=1.2)
+    cbar.outline.set_linewidth(1.3)
 
     draw_location_inset(ax, config.mesh["domain"], site, args.half_width_deg)
 
@@ -272,15 +280,16 @@ def main() -> int:
         ha="center", fontsize=ANNOT_FS, color="dimgray",
     )
 
+    panel_label = PANEL_LABELS.get(args.site, "")
     ax.set_title(
-        f"Sea-breeze cross-section — {args.site}  |  {moments.tmax_time} UTC  "
-        f"(windiest day: {moments.day.date()})",
+        f"{panel_label} Sea-breeze cross-section — {args.site}  "
+        f"({moments.tmax_time:%Y-%m-%d %H:%M} UTC, windiest day)",
         fontsize=TITLE_FS, pad=10,
     )
 
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     out = args.output or FIG_DIR / f"fig02_xsection_seabreeze_{args.site.lower()}.png"
-    fig.savefig(out, dpi=args.dpi, bbox_inches="tight")
+    fig.savefig(out, dpi=args.dpi, bbox_inches="tight", pad_inches=0.05)
     plt.close(fig)
     print(f"wrote {out}")
     return 0

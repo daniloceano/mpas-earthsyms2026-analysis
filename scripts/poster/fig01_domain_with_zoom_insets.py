@@ -45,10 +45,11 @@ FIG_DIR = cfg.REPO_ROOT / "figures" / "poster"
 RAD2DEG = 180.0 / np.pi
 KM_PER_DEG_LAT = 111.0
 
-# Poster font sizes
-TITLE_FS = 12
-LABEL_FS = 10
-TICK_FS = 9
+# Poster font sizes (bumped for legibility at poster viewing distance)
+TITLE_FS = 20
+LABEL_FS = 16
+TICK_FS = 14
+ANNOT_FS = 11
 
 # Site marker/box/connector colour. Both sites used to have distinct colours
 # (red/green) but those washed out against the SST/terrain fill, so both use
@@ -57,8 +58,8 @@ SITE_COLORS = {"P0": "black", "LPI": "black"}
 
 # Inset placement, in ax_main axes-fraction coordinates: (x0, y0, width, height).
 INSET_BOUNDS = {
-    "P0": (0.015, 0.04, 0.30, 0.37),
-    "LPI": (0.685, 0.60, 0.30, 0.37),
+    "P0": (0.015, 0.03, 0.33, 0.40),
+    "LPI": (0.66, 0.57, 0.33, 0.40),
 }
 
 
@@ -208,12 +209,12 @@ def draw_zoom_panel(
     if ocean_polys:
         ax.add_collection(PolyCollection(
             ocean_polys, facecolors="#cfe8f3", edgecolors="grey",
-            linewidths=0.3, zorder=1,
+            linewidths=0.6, zorder=1,
         ))
     if land_polys:
         land_coll = PolyCollection(
             land_polys, array=land_values, cmap=cmap_land, norm=norm_land,
-            edgecolors="grey", linewidths=0.3, zorder=1,
+            edgecolors="grey", linewidths=0.6, zorder=1,
         )
         ax.add_collection(land_coll)
 
@@ -224,26 +225,26 @@ def draw_zoom_panel(
         highlight_poly = polygons[local_positions[0]]
         ax.add_collection(PolyCollection(
             [highlight_poly], facecolor="none", edgecolor=color,
-            linewidth=2.0, zorder=3,
+            linewidth=2.6, zorder=3,
         ))
         ax.annotate(
             f"MPAS cell\n(~{np.sqrt((cell_lat - site['lat'])**2 + (cell_lon - site['lon'])**2) * KM_PER_DEG_LAT:.1f} km)",
             xy=(cell_lon, cell_lat), xytext=(8, -18),
-            textcoords="offset points", fontsize=7, color=color,
-            bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=color,
-                      alpha=0.9, lw=0.5),
-            arrowprops=dict(arrowstyle="-", color=color, lw=0.7),
+            textcoords="offset points", fontsize=ANNOT_FS, color=color,
+            bbox=dict(boxstyle="round,pad=0.25", fc="white", ec=color,
+                      alpha=0.9, lw=0.9),
+            arrowprops=dict(arrowstyle="-", color=color, lw=1.1),
             zorder=5,
         )
 
-    ax.plot(site["lon"], site["lat"], marker="*", markersize=14,
+    ax.plot(site["lon"], site["lat"], marker="*", markersize=17,
             markerfacecolor="black", markeredgecolor="white",
-            markeredgewidth=1.0, zorder=6)
+            markeredgewidth=1.3, zorder=6)
     ax.annotate(
         site_key, xy=(site["lon"], site["lat"]), xytext=(5, 5),
-        textcoords="offset points", fontsize=8, fontweight="bold",
+        textcoords="offset points", fontsize=TICK_FS - 1, fontweight="bold",
         bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="black",
-                  alpha=0.85, lw=0.5),
+                  alpha=0.85, lw=0.9),
         zorder=7,
     )
 
@@ -252,8 +253,10 @@ def draw_zoom_panel(
     # is, so the inset stays map-only.
     ax.xaxis.set_major_locator(plt.MaxNLocator(3))
     ax.yaxis.set_major_locator(plt.MaxNLocator(3))
-    ax.tick_params(labelsize=TICK_FS - 2)
+    ax.tick_params(labelsize=TICK_FS - 3, width=1.2)
     ax.set_aspect("equal")
+    for spine in ax.spines.values():
+        spine.set_linewidth(1.4)
 
 
 def draw_zoom_box(
@@ -274,7 +277,7 @@ def draw_zoom_box(
     plate = ccrs.PlateCarree()
     rect = mpatches.Rectangle(
         (lon_min, lat_min), lon_max - lon_min, lat_max - lat_min,
-        linewidth=2.0, edgecolor=color, facecolor="none",
+        linewidth=2.6, edgecolor=color, facecolor="none",
         transform=plate, zorder=7,
     )
     ax_main.add_patch(rect)
@@ -296,7 +299,7 @@ def draw_zoom_box(
     con = ConnectionPatch(
         xyA=box_anchor, coordsA=plate_transform, axesA=ax_main,
         xyB=inset_anchor, coordsB=ax_main.transAxes, axesB=ax_main,
-        color=color, linewidth=1.1, linestyle="--", alpha=0.85, zorder=6,
+        color=color, linewidth=1.6, linestyle="--", alpha=0.85, zorder=6,
     )
     ax_main.add_artist(con)
 
@@ -390,27 +393,31 @@ def main() -> int:
         ax_main, all_polygons, valid_idx, landmask, ter, sst_c, args.sst_min_valid
     )
 
-    ax_main.coastlines(resolution="10m", linewidth=0.4, color="black", zorder=3)
+    ax_main.coastlines(resolution="10m", linewidth=0.9, color="black", zorder=3)
     gl = ax_main.gridlines(draw_labels=True, alpha=0.35, linestyle="--",
-                            linewidth=0.35)
+                            linewidth=0.6)
     gl.top_labels = False
     gl.right_labels = False
+    gl.xlabel_style = {"size": TICK_FS}
+    gl.ylabel_style = {"size": TICK_FS}
+    for spine in ax_main.spines.values():
+        spine.set_linewidth(1.4)
 
     # Site markers on main map
     for site_key, obs in config.observations.items():
         color = SITE_COLORS[site_key]
         ax_main.plot(
-            obs["lon"], obs["lat"], marker="*", markersize=16,
-            markerfacecolor=color, markeredgecolor="white", markeredgewidth=1.0,
+            obs["lon"], obs["lat"], marker="*", markersize=19,
+            markerfacecolor=color, markeredgecolor="white", markeredgewidth=1.3,
             transform=ccrs.PlateCarree(), zorder=8,
         )
         ax_main.annotate(
             site_key,
             xy=(obs["lon"], obs["lat"]),
             xytext=(7, 5), textcoords="offset points",
-            fontsize=9, fontweight="bold", color=color,
+            fontsize=TICK_FS, fontweight="bold", color=color,
             bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=color,
-                      alpha=0.9, lw=0.6),
+                      alpha=0.9, lw=1.0),
             zorder=9,
         )
 
@@ -431,10 +438,15 @@ def main() -> int:
     cbar_ocean.set_label(f"Initial SST (°C) — {sim.label}", fontsize=LABEL_FS)
     cbar_ocean_ax.tick_params(labelsize=TICK_FS)
 
+    # y=1.0 is required here: with a poster-size TITLE_FS, matplotlib's
+    # automatic title-offset (anti-overlap-with-tick-labels) logic collides
+    # with cartopy's Gridliner and resolves to an infinite y-position,
+    # silently dropping the title entirely. Passing y explicitly bypasses
+    # that automatic offset computation.
     ax_main.set_title(
-        f"MPAS {mesh_name} (~{config.mesh['mean_cell_spacing_km']:.1f} km) "
+        f"MPAS domain (~{config.mesh['mean_cell_spacing_km']:.1f} km) "
         "— terrain & initial SST",
-        fontsize=TITLE_FS,
+        fontsize=TITLE_FS, y=1.0,
     )
 
     # --- Zoom panels ---
@@ -490,6 +502,10 @@ def main() -> int:
 
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     out = args.output or FIG_DIR / f"fig01_domain_with_zoom_insets_{args.sim}.png"
+    # NOTE: bbox_inches="tight" is deliberately NOT used here — cartopy's
+    # GeoAxes reports an incorrect tight bbox for hand-added PolyCollections
+    # (it crops to just the colorbars, losing the whole map). Margins are
+    # already hand-tuned via MAP_TOP/MAP_BOTTOM/MAP_RIGHT above instead.
     fig.savefig(out, dpi=args.dpi)
     plt.close(fig)
     print(f"wrote {out}")
